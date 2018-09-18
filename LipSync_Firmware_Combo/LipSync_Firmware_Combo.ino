@@ -320,8 +320,8 @@ void loop() {
             Keyboard.press('w');
             //Keyboard.press(KEY_UP_ARROW);
           }
-          delay(button_delay);
-          Keyboard.releaseAll();     
+          delay(speed_counter*50);            //time delay between each key press
+          //Keyboard.releaseAll();     
       }
         poll_counter = 0;
     }

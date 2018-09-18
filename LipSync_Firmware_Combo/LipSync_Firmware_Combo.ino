@@ -116,7 +116,7 @@ _cursor cursor_params[9] = {setting1, setting2, setting3, setting4, setting5, se
 int single = 0;
 int puff1, puff2, puff3;
 
-int button_delay = 400;                           //button delay
+int button_delay = 300;                           //button delay
 
 int js_button_state[4];                           // Last state of the button
 int js_deadzone_divisor = 4;                      // a constant to calculate deadzone joystick area for each axis
@@ -320,7 +320,7 @@ void loop() {
             Keyboard.press('w');
             //Keyboard.press(KEY_UP_ARROW);
           }
-          delay(speed_counter*50);            //time delay between each key press
+          delay(cursor_delay*50);            //time delay between each key press
           //Keyboard.releaseAll();     
       }
         poll_counter = 0;

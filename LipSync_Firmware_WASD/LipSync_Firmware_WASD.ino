@@ -99,6 +99,8 @@ _wasd wasd_params[9] = {setting1, setting2, setting3, setting4, setting5, settin
 int single = 0;
 int puff1, puff2;
 
+int button_delay = 300;                           //button delay
+
 //-----------------------------------------------------------------------------------------------------------------------------------
 
 //***MICROCONTROLLER AND PERIPHERAL MODULES CONFIGURATION***//
@@ -222,33 +224,31 @@ void loop() {
           //Right arrow KEY (D)
           //Serial.println("axis1"); 
           //Keyboard.press(KEY_RIGHT_ARROW);
-          Keyboard.press('d');    
-          delay(wasd_delay);
+          Keyboard.press('d');  
           //poll_counter = 0;
         } else if ((yl > xh) && (yl > xl) && (yl > yh)) {
           //Down arrow KEY (S)
           //Serial.println("axis4");
           //Keyboard.press(KEY_DOWN_ARROW);
           Keyboard.press('s'); 
-          delay(wasd_delay);
           //poll_counter = 0;
         } else if ((xl > yh) && (xl > xh) && (xl > yh)) {
           //Left arrow KEY (A)
           //Serial.println("axis3");  
           //Keyboard.press(KEY_LEFT_ARROW);
           Keyboard.press('a');
-          delay(wasd_delay);
           //poll_counter = 0;
         } else if ((yh > xh) && (yh > yl) && (yh > xl)) {
           //Up arrow KEY (W)
           //Serial.println("axis2");
           //Keyboard.press(KEY_UP_ARROW);
           Keyboard.press('w');
-          delay(wasd_delay);
         }        
-        Keyboard.releaseAll();
+        delay(wasd_delay*50);            //time delay between each key press
         poll_counter = 0;
     }
+   } else {
+    Keyboard.releaseAll();
   }
 
   //wasd speed control push button functions below
@@ -285,12 +285,12 @@ void loop() {
       if (puff_count < 150) {
         //ENTER or RETURN KEY
         Keyboard.press(KEY_RETURN); 
-        delay(100);
+        delay(button_delay);
         Keyboard.releaseAll();
       } else if (puff_count > 150 && puff_count < 750) {
         //O KEY
         Keyboard.press('o'); 
-        delay(100);
+        delay(button_delay);
         Keyboard.releaseAll();
       } else if (puff_count > 750) {
         blink(4, 350, 3);     // visual prompt for user to release joystick for automatic calibration of home position
@@ -309,12 +309,12 @@ void loop() {
       if (sip_count < 150) {
          //ESC KEY
         Keyboard.press(KEY_ESC);    
-        delay(100);
+        delay(button_delay);
         Keyboard.releaseAll();
       } else if (sip_count > 150) {
         //P KEY
         Keyboard.press('p'); 
-        delay(100);
+        delay(button_delay);
         Keyboard.releaseAll();
       }
     sip_count = 0;

@@ -13,7 +13,7 @@
 */
 
 //EDITED BY: Milad Hajihassan
-//VERSION: 1.0 (9 May 2018)
+//VERSION: 1.0 (19 September 2018)
 
 
 #include <EEPROM.h>
@@ -21,19 +21,6 @@
 #include <Keyboard.h>
 #include "Joystick.h"
 #include <math.h>
-
-
-Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID, 
-  JOYSTICK_TYPE_JOYSTICK, 4, 0,
-  true, true, false, 
-  false, false, false,
-  false, false, 
-  false, false, false);
-
-int button1 = 0;
-int button2 = 1;
-int button3 = 2;
-int button4 = 3;
 
 
 
@@ -56,6 +43,19 @@ int button4 = 3;
 #define Y_DIR_LOW A10                             // Y Direction Low (Cartesian negative y : down) - analog input pin A10
 
 //***VARIABLE DECLARATION***//
+
+Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID, 
+  JOYSTICK_TYPE_JOYSTICK, 4, 0,
+  true, true, false, 
+  false, false, false,
+  false, false, 
+  false, false, false);                         //Defining the joystick REPORT_ID and type
+
+int button1 = 0;
+int button2 = 1;
+int button3 = 2;
+int button4 = 3;
+
 
 int xh, yh, xl, yl;                               // xh: x-high, yh: y-high, xl: x-low, yl: y-low
 int x_right, x_left, y_up, y_down;                // individual neutral starting positions for each FSR
@@ -153,10 +153,7 @@ void setup() {
   pinMode(13, INPUT_PULLUP);
 
   pinMode(SWITCH1, INPUT_PULLUP);
-  
-  //delay(2000);                                    // DO NOT REMOVE DELAY!!!
 
-  //while(!Serial);
 
   while(!Serial1);
   
@@ -170,9 +167,9 @@ void setup() {
   delay(10);
   Set_Default();                                  // should only occur once per initialization of a new microcontroller
   delay(10);                                      // conditionally configure the Bluetooth module [WHAT IF A NEW BT MODULE IS INSTALLED?]
-  joystick_speed_value();                           // reads saved cursor speed parameter from EEPROM
+  Joystick_Speed_Value();                           // reads saved cursor speed parameter from EEPROM
   delay(10);
-  operation_mode_value();                         // read saved operation mode parameter from EEPROM
+  Operation_Mode_Value();                         // read saved operation mode parameter from EEPROM
   delay(10);
   
   js_button_state[0] = 0;
@@ -267,16 +264,16 @@ void loop() {
       if (operation_mode == 0) {                  // Mouse mode
           if ((xh_yh >= xh_yl) && (xh_yh >= xl_yh) && (xh_yh >= xl_yl)) {
             //Serial.println("quad1");
-            Mouse.move(x_cursor_high(xh), y_cursor_high(yh), 0);
+            Mouse.move(X_Cursor_High(xh), Y_Cursor_High(yh), 0);
           } else if ((xh_yl > xh_yh) && (xh_yl > xl_yl) && (xh_yl > xl_yh)) {
             //Serial.println("quad4");
-            Mouse.move(x_cursor_high(xh), y_cursor_low(yl), 0);
+            Mouse.move(X_Cursor_High(xh), Y_Cursor_Low(yl), 0);
           }  else if ((xl_yl >= xh_yh) && (xl_yl >= xh_yl) && (xl_yl >= xl_yh)) {
             //Serial.println("quad3");
-            Mouse.move(x_cursor_low(xl), y_cursor_low(yl), 0);
+            Mouse.move(X_Cursor_Low(xl), Y_Cursor_Low(yl), 0);
           } else if ((xl_yh > xh_yh) && (xl_yh >= xh_yl) && (xl_yh >= xl_yl)) {
             //Serial.println("quad2: ");
-            Mouse.move(x_cursor_low(xl), y_cursor_high(yh), 0);
+            Mouse.move(X_Cursor_Low(xl), Y_Cursor_High(yh), 0);
           }
           delay(cursor_delay);    
       } else if (operation_mode == 1) {                  // Joystick mode 
@@ -339,7 +336,7 @@ void loop() {
     if (digitalRead(PUSH_BUTTON_DOWN) == LOW) {
       Joystick_Calibration();
     } else {
-      increase_cursor_speed();      // increase joystick speed with push button up
+      Increase_Cursor_Speed();      // increase joystick speed with push button up
     }
   }
 
@@ -348,7 +345,7 @@ void loop() {
     if (digitalRead(PUSH_BUTTON_UP) == LOW) {
       Joystick_Calibration();
     } else {
-      decrease_cursor_speed();      // decrease joystick speed with push button down
+      Decrease_Cursor_Speed();      // decrease joystick speed with push button down
     }
   }
 
@@ -440,7 +437,7 @@ void loop() {
         }
       } else if (sip_count > 100 && sip_count < 500) {
         if (operation_mode==0){                          // Mouse mode 
-          mouseScroll();
+          Mouse_Scroll();
           delay(5);
         } else if (operation_mode==1) {                  // Joystick mode
            if (!js_button_state[3]) {
@@ -457,7 +454,7 @@ void loop() {
           Keyboard.releaseAll();
         }
       } else if (sip_count > 500) {
-        change_mode();
+        Change_Mode();
         delay(5);
       }
     sip_count = 0;
@@ -467,7 +464,7 @@ void loop() {
       //Switch 1 is not pressed
     } 
     else if (switch1_enabled==HIGH) {
-      change_mode();
+      Change_Mode();
     }
 }
 
@@ -490,7 +487,7 @@ void Display_Feature_List(void) {
 }
 
 //***CHANGE MODE FUNCTION SELECTION***//
-void change_mode(void) {
+void Change_Mode(void) {
   if ((operation_mode == 0) || (operation_mode == 1)) {     //Change the operation_mode by incrementing it by 1
     operation_mode++;
   } else {
@@ -506,38 +503,38 @@ void change_mode(void) {
 
 //***LED BLINK FUNCTIONS***//
 
-void blink(int num_Blinks, int delay_Blinks, int LED_number ) {
-  if (num_Blinks < 0) num_Blinks *= -1;
+void blink(int num_blinks, int delay_blinks, int led_number ) {
+  if (num_blinks < 0) num_blinks *= -1;
 
-  switch (LED_number) {
+  switch (led_number) {
     case 1: {
-        for (int i = 0; i < num_Blinks; i++) {
+        for (int i = 0; i < num_blinks; i++) {
           digitalWrite(LED_1, HIGH);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_1, LOW);
-          delay(delay_Blinks);
+          delay(delay_blinks);
         }
         break;
       }
     case 2: {
-        for (int i = 0; i < num_Blinks; i++) {
+        for (int i = 0; i < num_blinks; i++) {
           digitalWrite(LED_2, HIGH);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_2, LOW);
-          delay(delay_Blinks);
+          delay(delay_blinks);
         }
         break;
       }
     case 3: {
-        for (int i = 0; i < num_Blinks; i++) {
+        for (int i = 0; i < num_blinks; i++) {
           digitalWrite(LED_1, HIGH);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_1, LOW);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_2, HIGH);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_2, LOW);
-          delay(delay_Blinks);
+          delay(delay_blinks);
         }
         break;
       }
@@ -546,7 +543,7 @@ void blink(int num_Blinks, int delay_Blinks, int LED_number ) {
 
 //***OPERATION MODE NUMBER FUNCTIONS***//
 
-void operation_mode_value(void) {
+void Operation_Mode_Value(void) {
   int var;
   EEPROM.get(30, var);
   delay(5);
@@ -558,14 +555,14 @@ void operation_mode_value(void) {
 
 //***HID JOYSTICK SPEED FUNCTIONS***//
 
-void joystick_speed_value(void) {
+void Joystick_Speed_Value(void) {
   int var;
   EEPROM.get(2, var);
   delay(5);
   speed_counter = var;
 }
 
-void increase_cursor_speed(void) {
+void Increase_Cursor_Speed(void) {
   speed_counter++;
 
   if (speed_counter == 9) {
@@ -584,7 +581,7 @@ void increase_cursor_speed(void) {
   }
 }
 
-void decrease_cursor_speed(void) {
+void Decrease_Cursor_Speed(void) {
   speed_counter--;
 
   if (speed_counter == -1) {
@@ -615,7 +612,7 @@ void decrease_cursor_speed(void) {
 
 //***HID JOYSTICK MOVEMENT FUNCTIONS***//
 
-int y_cursor_high(int j) {
+int Y_Cursor_High(int j) {
 
   if (j > y_up) {
 
@@ -637,7 +634,7 @@ int y_cursor_high(int j) {
   }
 }
 
-int y_cursor_low(int j) {
+int Y_Cursor_Low(int j) {
 
   if (j > y_down) {
 
@@ -660,7 +657,7 @@ int y_cursor_low(int j) {
   }
 }
 
-int x_cursor_high(int j) {
+int X_Cursor_High(int j) {
 
   if (j > x_right) {
 
@@ -683,7 +680,7 @@ int x_cursor_high(int j) {
   }
 }
 
-int x_cursor_low(int j) {
+int X_Cursor_Low(int j) {
 
   if (j > x_left) {
 
@@ -707,7 +704,7 @@ int x_cursor_low(int j) {
 
 //***MOUSE SCROLLING FUNCTION***//
 
-void mouseScroll(void) {
+void Mouse_Scroll(void) {
   while (1) {
 
     int scroll_up = analogRead(Y_DIR_HIGH);                      // A2
@@ -718,10 +715,10 @@ void mouseScroll(void) {
     if (operation_mode == 0) {
 
       if (scroll_up > y_up + 30) {
-        Mouse.move(0, 0, -1 * y_cursor_high(scroll_up));
+        Mouse.move(0, 0, -1 * Y_Cursor_High(scroll_up));
         delay(cursor_delay * 35);   // started with this factor change as necessary
       } else if (scroll_down > y_down + 30) {
-        Mouse.move(0, 0, -1 * y_cursor_low(scroll_down));
+        Mouse.move(0, 0, -1 * Y_Cursor_Low(scroll_down));
         delay(cursor_delay * 35);   // started with this factor change as necessary
       } else if ((scroll_release > sip_threshold) || (scroll_release < puff_threshold)) {
         break;
@@ -975,28 +972,6 @@ void Manual_Joystick_Home_Calibration(void) {
 
 //***SPECIAL INITIALIZATION OPERATIONS***//
 
-void Serial_Initialization(void) {
-  while (!Serial1) {
-    while (!Serial) {
-      if (init_counter_A < 100) {
-        delay(5);
-        init_counter_A++;
-      } else {
-        break;
-      }
-    }
-    if (init_counter_B < 100) {
-      delay(5);
-      init_counter_B++;
-    } else {
-      break;
-    }
-  }
-  delay(10);
-  Serial.println(init_counter_A);
-  Serial.println(init_counter_B);
-  Serial.println("Serial and Serial1 are good!");
-}
 
 void Set_Default(void) {
 

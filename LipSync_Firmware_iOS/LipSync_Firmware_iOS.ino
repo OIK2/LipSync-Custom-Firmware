@@ -129,11 +129,7 @@ void setup() {
   pinMode(11, INPUT_PULLUP);
   pinMode(13, INPUT_PULLUP);
 
-  //delay(2000);                                    // DO NOT REMOVE DELAY!!!
-
-  //while(!Serial);
-
-  //while(!Serial1);
+  while(!Serial1);
   
   Joystick_Initialization();                      // home joystick and generate movement threshold boundaries
   delay(10);
@@ -145,9 +141,9 @@ void setup() {
   delay(10);
                                   // conditionally configure the Bluetooth module [WHAT IF A NEW BT MODULE IS INSTALLED?]
   delay(10);
-  switch_speed_value();                           // reads saved switch speed parameter from EEPROM
+  Switch_Speed_Value();                           // reads saved switch speed parameter from EEPROM
   delay(10);
-  operation_mode_value();                         // read saved operation mode parameter from EEPROM
+  Operation_Mode_Value();                         // read saved operation mode parameter from EEPROM
   delay(10);
   
   int exec_time = millis();
@@ -155,7 +151,7 @@ void setup() {
   Serial.println(exec_time);
 
   blink(4, 250, 3);                               // end initialization visual feedback
-BT_Configure(); 
+  BT_Configure(); 
   Display_Feature_List();  
 
   switch_delay = switch_params[speed_counter]._delay;
@@ -229,73 +225,100 @@ void loop() {
    delay(30);    // originally 15 ms
     if (poll_counter >= 10) {
       if (comm_mode == 1) {                   //iOS mode
-        if ((xh > xl) && (xh > yh) && (xh > yl)) {
-          //Serial.println("axis1");
+        if ((xh_yh >= xh_yl) && (xh_yh >= xl_yh) && (xh_yh >= xl_yl)) {
+          //Serial.println("quad1");
           if (operation_mode == 0) {
             //Right arrow key
-            keyboardCommand((byte)0x00,byte(0x4F));
+            (abs(x_left-xl)<(x_left)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x4F));
+            //Up arrow key
+            (abs(y_down-yl)<(y_down)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x52));
+            //Keyboard_Command((byte)0x00,byte(0x4F));
           } else if (operation_mode == 1) {
             //Move keyboard cursor to the right direction (Alt/option Key + Right Arrow Key)
-            keyboardCommand((1<<2),byte(0x4F));
+            (abs(x_left-xl)<(x_left)) ? Keyboard_Clear() : Keyboard_Command((1<<2),byte(0x4F));
+            //Begin text selection on the right side of keyboard cursor (Shift Key + Right Arrow Key)
+            (abs(y_down-yl)<(y_down)) ? Keyboard_Clear() : Keyboard_Command((1<<1),byte(0x4F));
+            //Keyboard_Command((1<<2),byte(0x4F));
           }        
-          delay(switch_delay);
-        } else if ((yl > xh) && (yl > xl) && (yl > yh)) {
-          //Serial.println("axis4");
+        } else if ((xh_yl > xh_yh) && (xh_yl > xl_yl) && (xh_yl > xl_yh)) {
+          //Serial.println("quad4");
           if (operation_mode == 0) {
+            //Right arrow key
+            (abs(x_left-xl)<(x_left)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x4F));
             //Down arrow key
-            keyboardCommand((byte)0x00,byte(0x51));
+            (abs(y_up-yh)<(y_up)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x51));            
+            //Keyboard_Command((byte)0x00,byte(0x51));
           } else if (operation_mode == 1) {
+            //Move keyboard cursor to the right direction (Alt/option Key + Right Arrow Key)
+            (abs(x_left-xl)<(x_left)) ? Keyboard_Clear() : Keyboard_Command((1<<2),byte(0x4F));
             //Begin text selection on the left side of keyboard cursor (Shift Key + Left Arrow key)
-            keyboardCommand((1<<1),byte(0x50));
+            (abs(y_up-yh)<(y_up)) ? Keyboard_Clear() : Keyboard_Command((1<<1),byte(0x50));  
+            //Keyboard_Command((1<<1),byte(0x50));
           }        
-          delay(switch_delay);
-        } else if ((xl > yh) && (xl > xh) && (xl > yh)) {
-          //Serial.println("axis3");
+        } else if ((xl_yl >= xh_yh) && (xl_yl >= xh_yl) && (xl_yl >= xl_yh)) {
+          //Serial.println("quad3");
           if (operation_mode == 0) {
             //Left arrow key
-            keyboardCommand((byte)0x00,byte(0x50));
+            (abs(xh-x_right)<(x_right)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x50));            
+            //Down arrow key
+            (abs(y_up-yh)<(y_up)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x51));               
+            //Keyboard_Command((byte)0x00,byte(0x50));
           } else if (operation_mode == 1) {
             //Move cursor left (Alt/option key + Left arrow key)
-            keyboardCommand((1<<2),byte(0x50));
+            (abs(xh-x_right)<(x_right)) ? Keyboard_Clear() : Keyboard_Command((1<<2),byte(0x50));                
+            //Begin text selection on the left side of keyboard cursor (Shift Key + Left Arrow key)
+            (abs(y_up-yh)<(y_up)) ? Keyboard_Clear() : Keyboard_Command((1<<1),byte(0x50));              
+            //Keyboard_Command((1<<2),byte(0x50));
           }        
-          delay(switch_delay);
-        } else if ((yh > xh) && (yh > yl) && (yh > xl)) {
-          //Serial.println("axis2");
+        } else if ((xl_yh > xh_yh) && (xl_yh >= xh_yl) && (xl_yh >= xl_yl)) {
+          //Serial.println("quad2");
           if (operation_mode == 0) {
+            //Left arrow key
+            (abs(xh-x_right)<(x_right)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x50));              
             //Up arrow key
-            keyboardCommand((byte)0x00,byte(0x52));
+            (abs(y_down-yl)<(y_down)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x52));            
+            //Keyboard_Command((byte)0x00,byte(0x52));
           } else if (operation_mode == 1) {
+            //Move cursor left (Alt/option key + Left arrow key)
+            (abs(xh-x_right)<(x_right)) ? Keyboard_Clear() : Keyboard_Command((1<<2),byte(0x50));               
             //Begin text selection on the right side of keyboard cursor (Shift Key + Right Arrow Key)
-            keyboardCommand((1<<1),byte(0x4F));
+            (abs(y_down-yl)<(y_down)) ? Keyboard_Clear() : Keyboard_Command((1<<1),byte(0x4F));
+            //Keyboard_Command((1<<1),byte(0x4F));
           }        
-          delay(switch_delay);
-        }        
+        }
+        delay(switch_delay);       
         poll_counter = 0;
       } else {                   //tvOS mode
-        if ((xh > xl) && (xh > yh) && (xh > yl)) {
-          //Serial.println("axis1");
+        if ((xh_yh >= xh_yl) && (xh_yh >= xl_yh) && (xh_yh >= xl_yl)) {
+          //Serial.println("quad1");
           //Right arrow key
-          keyboardCommand((byte)0x00,byte(0x4F));
-          delay(switch_delay);
-          //poll_counter = 0;
-        } else if ((yl > xh) && (yl > xl) && (yl > yh)) {
-          //Serial.println("axis4");
-          //Down arrow key
-          keyboardCommand((byte)0x00,byte(0x51));
-          delay(switch_delay);
-          //poll_counter = 0;
-        } else if ((xl > yh) && (xl > xh) && (xl > yh)) {
-          //Serial.println("axis3");
-          //Left arrow key
-          keyboardCommand((byte)0x00,byte(0x50));
-          delay(switch_delay);
-          //poll_counter = 0;
-        } else if ((yh > xh) && (yh > yl) && (yh > xl)) {
-          //Serial.println("axis2");
+          (abs(x_left-xl)<(x_left)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x4F));
           //Up arrow key
-          keyboardCommand((byte)0x00,byte(0x52));
-          delay(switch_delay);
+          (abs(y_down-yl)<(y_down)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x52));          
+          //Keyboard_Command((byte)0x00,byte(0x4F));
+        } else if ((xh_yl > xh_yh) && (xh_yl > xl_yl) && (xh_yl > xl_yh)) {
+          //Serial.println("quad4");
+          //Right arrow key
+          (abs(x_left-xl)<(x_left)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x4F));
+          //Down arrow key
+          (abs(y_up-yh)<(y_up)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x51));              
+          //Keyboard_Command((byte)0x00,byte(0x51));
+        } else if ((xl_yl >= xh_yh) && (xl_yl >= xh_yl) && (xl_yl >= xl_yh)) {
+          //Serial.println("quad3");
+          //Left arrow key
+          (abs(xh-x_right)<(x_right)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x50));            
+          //Down arrow key
+          (abs(y_up-yh)<(y_up)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x51));  
+          //Keyboard_Command((byte)0x00,byte(0x50));
+        } else if ((xl_yh > xh_yh) && (xl_yh >= xh_yl) && (xl_yh >= xl_yl)) {
+          //Serial.println("quad2");
+          //Left arrow key
+          (abs(xh-x_right)<(x_right)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x50));              
+          //Up arrow key
+          (abs(y_down-yl)<(y_down)) ? Keyboard_Clear() : Keyboard_Command((byte)0x00,byte(0x52));   
+          //Keyboard_Command((byte)0x00,byte(0x52));
         }
+        delay(switch_delay);
         poll_counter = 0;
       }
     }
@@ -308,7 +331,7 @@ void loop() {
     if (digitalRead(PUSH_BUTTON_DOWN) == LOW) {
       Joystick_Calibration();
     } else {
-      increase_switch_speed();      // increase switch speed with push button up
+      Increase_Switch_Speed();      // increase switch speed with push button up
     }
   }
 
@@ -317,7 +340,7 @@ void loop() {
     if (digitalRead(PUSH_BUTTON_UP) == LOW) {
       Joystick_Calibration();
     } else {
-      decrease_switch_speed();      // decrease switch speed with push button down
+      Decrease_Switch_Speed();      // decrease switch speed with push button down
     }
   }
 
@@ -336,17 +359,17 @@ void loop() {
     if (comm_mode == 1) {                   //iOS mode
       if (puff_count < 150) {
         //Enter or select
-        keyboardCommand(byte(0x00),byte(0x28));
+        Keyboard_Command(byte(0x00),byte(0x28));
         delay(100);
       } else if (puff_count > 150 && puff_count < 750) {
         if (operation_mode == 0) {
           //Search
           //Cmd or KEY_GUI_LEFT key + Space key
-          keyboardCommand((1<<3),byte(0x2C));
+          Keyboard_Command((1<<3),byte(0x2C));
         } else if (operation_mode == 1) {
           //Find
           //Control key + F key
-          keyboardCommand((1<<0),byte(0x09));
+          Keyboard_Command((1<<0),byte(0x09));
         }        
         delay(100);
       } else if (puff_count > 750) {
@@ -356,11 +379,11 @@ void loop() {
     } else {                   //tvOS mode
       if (puff_count < 150) {
         //Enter or select Key
-        keyboardCommand(byte(0x00),byte(0x28));
+        Keyboard_Command(byte(0x00),byte(0x28));
         delay(100);
       } else if (puff_count > 150 && puff_count < 750) {
         //F3 Key to switch to a different app
-        keyboardCommand(byte(0x00),byte(0x3C));
+        Keyboard_Command(byte(0x00),byte(0x3C));
         delay(100);
       } else if (puff_count > 750) {
         blink(4, 350, 3);     // visual prompt for user to release joystick for automatic calibration of home position
@@ -381,31 +404,31 @@ void loop() {
     if (comm_mode == 1) {                   //iOS mode
       if (sip_count < 150) {
          //Space
-        keyboardCommand(byte(0x00),byte(0x2C));     
+        Keyboard_Command(byte(0x00),byte(0x2C));     
         delay(100);
       } else if (sip_count > 150 && sip_count < 750) {
         if (operation_mode == 0) {
           //Home screen
           //Cmd or KEY_GUI_LEFT key + H key
-          keyboardCommand((1<<3),byte(0x0B));
+          Keyboard_Command((1<<3),byte(0x0B));
         } else if (operation_mode == 1) {
           //Home screen
           //Cmd or KEY_GUI_LEFT key + H key
-          keyboardCommand((1<<3),byte(0x0B));
+          Keyboard_Command((1<<3),byte(0x0B));
         }        
         delay(100);
       } else if (sip_count > 750) {
-        change_mode();
+        Change_Mode();
         delay(5);
       }   
     } else {                   //tvOS mode
       if (sip_count < 150) {
         //F4 Key - Go back
-        keyboardCommand(byte(0x00),byte(0x29));        
+        Keyboard_Command(byte(0x00),byte(0x29));        
         delay(100);
       } else if (sip_count > 150 && sip_count < 750) {
         //F8 Key - Play or pause
-        keyboardCommand(byte(0x00),byte(0x41));       
+        Keyboard_Command(byte(0x00),byte(0x41));       
         delay(100);
       }
     }
@@ -414,7 +437,7 @@ void loop() {
 }
 
 //***CHANGE MODE FUNCTION SELECTION***//
-void change_mode(void) {
+void Change_Mode(void) {
   if (operation_mode == 0) {
     operation_mode++;
   } else {
@@ -446,38 +469,38 @@ void Display_Feature_List(void) {
 
 //***LED BLINK FUNCTIONS***//
 
-void blink(int num_Blinks, int delay_Blinks, int LED_number ) {
-  if (num_Blinks < 0) num_Blinks *= -1;
+void blink(int num_blinks, int delay_blinks, int led_number ) {
+  if (num_blinks < 0) num_blinks *= -1;
 
-  switch (LED_number) {
+  switch (led_number) {
     case 1: {
-        for (int i = 0; i < num_Blinks; i++) {
+        for (int i = 0; i < num_blinks; i++) {
           digitalWrite(LED_1, HIGH);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_1, LOW);
-          delay(delay_Blinks);
+          delay(delay_blinks);
         }
         break;
       }
     case 2: {
-        for (int i = 0; i < num_Blinks; i++) {
+        for (int i = 0; i < num_blinks; i++) {
           digitalWrite(LED_2, HIGH);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_2, LOW);
-          delay(delay_Blinks);
+          delay(delay_blinks);
         }
         break;
       }
     case 3: {
-        for (int i = 0; i < num_Blinks; i++) {
+        for (int i = 0; i < num_blinks; i++) {
           digitalWrite(LED_1, HIGH);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_1, LOW);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_2, HIGH);
-          delay(delay_Blinks);
+          delay(delay_blinks);
           digitalWrite(LED_2, LOW);
-          delay(delay_Blinks);
+          delay(delay_blinks);
         }
         break;
       }
@@ -486,7 +509,7 @@ void blink(int num_Blinks, int delay_Blinks, int LED_number ) {
 
 //***OPERATION MODE NUMBER FUNCTIONS***//
 
-void operation_mode_value(void) {
+void Operation_Mode_Value(void) {
   int var;
   EEPROM.get(30, var);
   delay(5);
@@ -498,14 +521,14 @@ void operation_mode_value(void) {
 
 //***HID KEYBOARD SWITCH SPEED FUNCTIONS***//
 
-void switch_speed_value(void) {
+void Switch_Speed_Value(void) {
   int var;
   EEPROM.get(2, var);
   delay(5);
   speed_counter = var;
 }
 
-void increase_switch_speed(void) {
+void Increase_Switch_Speed(void) {
   speed_counter++;
 
   if (speed_counter == 9) {
@@ -524,7 +547,7 @@ void increase_switch_speed(void) {
   }
 }
 
-void decrease_switch_speed(void) {
+void Decrease_Switch_Speed(void) {
   speed_counter--;
 
   if (speed_counter == -1) {
@@ -557,7 +580,7 @@ void decrease_switch_speed(void) {
 
 //***BLUETOOTH HID KEYBOARD IOS FUNCTIONS***//
 
-void keyboardCommand(byte modifier,byte button) {
+void Keyboard_Command(byte modifier,byte button) {
 
     byte modifierByte=(byte)0x00;
     byte buttonByte=(byte)0x00;
@@ -575,11 +598,11 @@ void keyboardCommand(byte modifier,byte button) {
     Serial1.write(BTkeyboard,5);
     Serial1.flush();
     delay(10);
-    keyboardClear();
+    Keyboard_Clear();
 
 }
 
-void keyboardClear(void) {
+void Keyboard_Clear(void) {
 
   byte BTkeyboard[2];
 

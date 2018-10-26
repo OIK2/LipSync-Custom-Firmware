@@ -20,7 +20,7 @@
 
 //***PIN ASSIGNMENTS***//
 
-#define MODE_SELECT 12                            // LipSync Mode Select - USB mode (commMode = 0; jumper on) or Bluetooth mode (commMode = 1; jumper off) - digital input pin 12 (internally pulled-up)
+#define MODE_SELECT 12                            // LipSync Mode Select 
 #define PUSH_BUTTON_UP 8                          // Cursor Control Button 1: UP - digital input pin 8 (internally pulled-up)
 #define PUSH_BUTTON_DOWN 7                        // Cursor Control Button 2: DOWN - digital input pin 7 (internally pulled-up)
 #define LED_1 4                                   // LipSync LED Color1 : GREEN - digital output pin 5
@@ -40,11 +40,11 @@
 int xHigh, yHigh, xLow, yLow;  
 
 
-int speedCounter = 2;                             //Declare variables for speed functionality 
-int fixedDelay = 10;
+int speedCounter = 4;                             //Declare variables for speed functionality 
+int fixedDelay = 30;
 int switchDelay;
 
-int commMode = 0;                                 // 0 == iOS mode or 1 == tvOS mode
+int commMode = 0;                                 // 1 == iOS mode or 0 == tvOS mode
 int operationMode = 0;                            // Switch between 2 iOS modes
 int configIsDone;                                 // Binary check of completed Bluetooth configuration
 bool bluetoothCanConfig = false;                  // Allow to config Bluetooth if the flag is true
@@ -91,12 +91,12 @@ void setup() {
   pinMode(11, INPUT_PULLUP);
   pinMode(13, INPUT_PULLUP);
 
+
+  delay(10);
+  
   while(!Serial1);
   
-  delay(10);
   pressureSensorInitialization();               //Initialize the pressure sensor
-  delay(10);
-  communicationModeStatus();                    // Identify the selected communication mode
   delay(10);
   switchSpeedValue();                           // Reads saved switch speed parameter from EEPROM
   delay(10);
@@ -109,8 +109,12 @@ void setup() {
 
   blink(4, 250, 3);                               // End the initialization visual feedback
   
+  
+  displayFeatureList();                           //Display the list of features
+  
+  Serial.println(communicationModeStatus());      // Identify the selected communication mode 
+  
   bluetoothConfigure(); 
-  displayFeatureList();                           //Display the list of features 
 
   switchDelay = pow(1.6,(9-speedCounter))*fixedDelay;   //Set the default speed 
 
@@ -156,7 +160,6 @@ void loop() {
    delay(15);
       if (pollCounter >= 10) {
           if ((xx >= 5) && (-5 < yy < 5) && ((abs(xx)) > (abs(yy)))) {
-            //Serial.println("right"); 
             if ((operationMode == 0) || (commMode == 0)) {
               //Right arrow key
               keyboardCommand((byte)0x00,byte(0x4F));
@@ -253,7 +256,10 @@ void loop() {
       } else if (puffCount > 150 && puffCount < 750) {
         //F3 Key to switch to a different app
         keyboardCommand(byte(0x00),byte(0x3C));
-      } 
+      } else if (puffCount > 750) {
+        //F9 Key - Fast Forward 
+        keyboardCommand(byte(0x00),byte(0x42));     
+      }
     }
       delay(switchDelay);
       puffCount = 0;
@@ -279,10 +285,13 @@ void loop() {
     } else {                   //tvOS mode
       if (sipCount < 150) {
         //F4 Key - Go back
-        keyboardCommand(byte(0x00),byte(0x29));    
+        keyboardCommand(byte(0x00),byte(0x3D));    
       } else if (sipCount > 150 && sipCount < 750) {
         //F8 Key - Play or pause
         keyboardCommand(byte(0x00),byte(0x41));     
+      } else if (sipCount > 750) {
+        //F7 Key - Rewind
+        keyboardCommand(byte(0x00),byte(0x40));     
       }
     }
       delay(switchDelay); 
@@ -312,11 +321,7 @@ void displayFeatureList(void) {
 
   Serial.println(" ");
   Serial.println(" --- ");
-  Serial.println("This is the LipSync iOS/tvOS firmware : VERSION: 1.0 (28 August 2018)");
-  Serial.println(" ");
-  Serial.println("Enhanced functions:");
-  Serial.println(" ");
-  Serial.println("tvOS and iOS modes");
+  Serial.println("This is the LipSync iOS/tvOS firmware : VERSION: 1.1 (25 October 2018)");
   Serial.println(" --- ");
   Serial.println(" ");
 
@@ -466,16 +471,17 @@ void keyboardClear(void) {
 
 //***COMMUNICATION MODE STATUS***//
 
-void communicationModeStatus(void) {
+String communicationModeStatus() {
+  String modeName;
   if (digitalRead(MODE_SELECT) == LOW) {
     commMode = 0;                                     // 0 == tvOS mode
-    delay(10);
-    Serial.println("commMode = 0 (tvOS)");
+    modeName="tvOS Mode";
   } else if (digitalRead(MODE_SELECT) == HIGH) {
     commMode = 1;                                     // 1 == iOS mode
-    delay(10);
-    Serial.println("commMode = 1 (iOS)");
+    modeName="iOS Mode";
   }
+  delay(10);
+  return modeName;
 }
 
 //***PRESSURE SENSOR INITIALIZATION FUNCTION***//
@@ -498,7 +504,7 @@ void bluetoothConfigureStatus(void) {
   EEPROM.get(46, var);                          // Assign value of EEPROM memory at index zero (0) to int variable var
   delay(10);
   configIsDone = (var == 1) ? var : 0;          //Define the configIsDone to 0 if the mose is set for the first time
-  Serial.println(var);                          // Only for diagnostics, may be removed later
+  //Serial.println(var);                          // Only for diagnostics, may be removed later
   delay(10);
 }
 
